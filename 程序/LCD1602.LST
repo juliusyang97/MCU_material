@@ -1,0 +1,192 @@
+C51 COMPILER V9.01   LCD1602                                                               08/08/2015 15:47:00 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE LCD1602
+OBJECT MODULE PLACED IN LCD1602.OBJ
+COMPILER INVOKED BY: D:\Program Files (x86)\KEIL4\C51\BIN\C51.EXE LCD1602.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #include"lcd1602.h"
+   3          
+   4          /*********************************************************
+   5            Function:       void DelayN40us(unsigned int n)
+   6            Description:    延时函数，延时40us的整数倍，传入值n代表延时
+   7                                            时间到n *40us，不能实现准确延时，只能实现大
+   8                                            概时间的延时，利用的是指令实现延时功能。
+   9            Calls:          没有调用其它函数
+  10            Called By:      void LCDWriteCommand(unsigned char dat);
+  11                                            void LCDWriteData(unsigned char dat);
+  12            Input:          unsigned int n  --- 用于延时时间的确定，取值、
+  13                                            为1~65535
+  14            Output:         无
+  15            Return:         无
+  16          ***********************************************************/
+  17          void DelayN40us(unsigned int n)
+  18          {
+  19   1              unsigned int i;
+  20   1              unsigned char j;            
+  21   1              for(i=n;i>0;i--)
+  22   1                      for(j=0;j<2;j++);          
+  23   1      }
+  24          /*********************************************************
+  25            Function:       void LCDInit(void);
+  26            Description:    液晶初始化函数,对LCD1602进行初始化操作，
+  27                                            在每一次实用液晶前必须用到的，外部可调用
+  28                                            函数。
+  29            Calls:          void LCDWriteCommand(unsigned char dat);
+  30                                            DelayN40us(unsigned int n);
+  31            Called By:      main();或其他
+  32            Input:          无
+  33            Output:         无
+  34            Return:         无
+  35          ***********************************************************/
+  36          void LCDInit(void)      
+  37          {
+  38   1              LCDWriteCommand(0x38);/*设置8位格式，2行，5x7*/
+  39   1              LCDWriteCommand(0x38);/*设置8位格式，2行，5x7*/
+  40   1              LCDWriteCommand(0x38);/*设置8位格式，2行，5x7，有的液晶做的不好，写三遍保险！！！！*/ 
+  41   1              LCDWriteCommand(0x0c);/*整体显示，关光标，不闪烁*/ 
+  42   1              LCDWriteCommand(0x06);/*设定输入方式，增量不移位*/
+  43   1              LCDWriteCommand(0x01);/*清除屏幕显示*/    
+  44   1              DelayN40us(100);                /*清屏延时*/ 
+  45   1      }
+  46          /*********************************************************
+  47            Function:       void LCDWriteCommand(unsigned char dat);
+  48            Description:    写命令函数，对LCD1602内部寄存器进行操作。
+  49            Calls:          DelayN40us(unsigned int n);
+  50            Called By:      void LCDInit(void);
+  51                                            void LCDDispChar(unsigned char x,unsigned char y,unsigned char dat);
+  52                                            void LCDDispNum(unsigned char x,unsigned char y,unsigned char dat);   
+  53            Input:          unsigned char dat --- 写入的命令
+  54            Output:         无
+  55            Return:         无
+C51 COMPILER V9.01   LCD1602                                                               08/08/2015 15:47:00 PAGE 2   
+
+  56          ***********************************************************/
+  57          void LCDWriteCommand(unsigned char dat)
+  58          {
+  59   1              LCD_DB=dat;
+  60   1              LCD_RS=0;/*选择写指令*/  
+  61   1              LCD_RW=0;/*写入指令值*/  
+  62   1              LCD_E=1; /*使能LCD1602*/         
+  63   1              LCD_E=0;
+  64   1              DelayN40us(1);/*写命令延时*/   
+  65   1      }
+  66          /*********************************************************
+  67            Function:       void LCDWriteData(unsigned char dat);
+  68            Description:    写数据函数，将数据写入LCD1602中。
+  69            Calls:          DelayN40us(unsigned int n);
+  70            Called By:      void LCDInit(void);
+  71                                            void LCDDispChar(unsigned char x,unsigned char y,unsigned char dat);
+  72                                            void LCDDispNum(unsigned char x,unsigned char y,unsigned char dat);   
+  73            Input:          unsigned char dat --- 写入的数据
+  74            Output:         无
+  75            Return:         无
+  76          ***********************************************************/
+  77          void LCDWriteData(unsigned char dat)      //写数据函数 
+  78          {
+  79   1              LCD_DB=dat;
+  80   1              LCD_RS=1;/*选择写数据*/   
+  81   1              LCD_RW=0;/*写入数据值*/   
+  82   1              LCD_E=1; /*使能LCD1602*/  
+  83   1              LCD_E=0;
+  84   1              DelayN40us(1);/*写数据延时*/ 
+  85   1      }
+  86          /*********************************************************
+  87            Function:       void LCDDispChar(unsigned char x,unsigned char y,unsigned char dat);
+  88            Description:    在某个屏幕位置上(x,y)位置显示一个字符，可外部调用。
+  89            Calls:          LCDWriteCommand(unsigned char dat);
+  90                                            void LCDWriteData(unsigned char dat);
+  91            Called By:      main();及其他
+  92            Input:          X（0-15),y(1-2),dat为显示字符‘a’形式。
+  93            Output:         无
+  94            Return:         无
+  95          ***********************************************************/
+  96          void LCDDispChar(unsigned char x,unsigned char y,unsigned char dat)
+  97          {
+  98   1              unsigned char address;
+  99   1              if(y==1)
+ 100   1                       address=0x80+x;         /*显示在第一排的时候的x的地址*/ 
+ 101   1              else
+ 102   1                       address=0xc0+x;         /*显示在第二排的时候的x的地址*/ 
+ 103   1              LCDWriteCommand(address);        /*输入地址*/ 
+ 104   1              LCDWriteData(dat);                       /*输入数据*/ 
+ 105   1      }
+ 106          /*********************************************************
+ 107            Function:       void LCDDispNum(unsigned char x,unsigned char y,unsigned char dat);
+ 108            Description:    在某个屏幕位置上(x,y)位置显示一个数字，可外部调用。
+ 109            Calls:          LCDWriteCommand(unsigned char dat);
+ 110                                            void LCDWriteData(unsigned char dat);
+ 111            Called By:      main();及其他
+ 112            Input:          X（0-15),y(1-2),dat(0-9)。
+ 113            Output:         无
+ 114            Return:         无
+ 115          ***********************************************************/
+ 116          void LCDDispNum(unsigned char x,unsigned char y,unsigned char dat)
+ 117          {
+C51 COMPILER V9.01   LCD1602                                                               08/08/2015 15:47:00 PAGE 3   
+
+ 118   1              unsigned char address;
+ 119   1              if(y==1)
+ 120   1                       address=0x80+x;         /*显示在第一排的时候的x的地址*/ 
+ 121   1              else
+ 122   1                       address=0xc0+x;         /*显示在第二排的时候的x的地址*/ 
+ 123   1              LCDWriteCommand(address);        /*输入地址*/ 
+ 124   1              LCDWriteData(dat+48);            /*输入数据*/ 
+ 125   1      }
+ 126          /*********************************************************
+ 127            Function:       void LCDDispString(unsigned char x,unsigned char y,unsigned char *string)
+ 128            Description:    在屏幕上显示一串字符，考虑到我的数值均存储于数组中，为方便而作，允许外部调用
+ 129            Calls:          void LCDDispChar(unsigned char x,unsigned char y,unsigned char dat);
+ 130            Called By:      main();及其他
+ 131            Input:          X（0-15),y(1-2),string为任意字符串，但是必须以0结尾。
+ 132            Output:         无
+ 133            Return:         无
+ 134          ***********************************************************/
+ 135          void LCDDispString(unsigned char x,unsigned char y,unsigned char *string)
+ 136          {
+ 137   1              while(*string != 0)                /*没有检测到字符串结尾时*/
+ 138   1              {
+ 139   2                      LCDDispChar(x,y,*string++);/*逐个显示字符串*/
+ 140   2                      x++;                                       /*行地址加1*/
+ 141   2              }
+ 142   1      }
+ 143          /*********************************************************
+ 144            Function:       void LCDDispNumInt(unsigned char x,unsigned char y,unsigned int dat);
+ 145            Description:    在某个屏幕位置上(x,y)位置显示一个无符号整形数字，可外部调用。
+ 146            Calls:          LCDDispNum(unsigned char x,unsigned char y,unsigned char dat);
+ 147            Called By:      main();及其他
+ 148            Input:          X（0-15),y(1-2),dat(0-65536)。
+ 149            Output:         无
+ 150            Return:         无
+ 151          ***********************************************************/
+ 152          void LCDDispNumInt(unsigned char x,unsigned char y,unsigned int dat)
+ 153          {
+ 154   1              unsigned char temp[5],i = 0,j=0;/*分离万千百十个各个位临时存储*/
+ 155   1              temp[0] = dat/10000%10;
+ 156   1              temp[1] = dat/1000%10;
+ 157   1              temp[2] = dat/100%10;
+ 158   1              temp[3] = dat/10%10;
+ 159   1              temp[4] = dat%10;
+ 160   1              
+ 161   1              while((temp[i] == 0)&&(i!=4)) /*为保证即使传入的数都是0也能显示，加上i！=4*/
+ 162   1                      i++;
+ 163   1              for(j=0;j<5-i;j++)                        /*依次显示各个数*/
+ 164   1                      LCDDispNum(x+j,y,temp[j+i]);
+ 165   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    346    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      15
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,75 @@
+C51 COMPILER V9.01   语音存储回放                                                          10/27/2015 21:35:24 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE 语音存储回放
+OBJECT MODULE PLACED IN 语音存储回放.OBJ
+COMPILER INVOKED BY: D:\Program Files (x86)\KEIL4\C51\BIN\C51.EXE 语音存储回放.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /////////ISD4004语音播放部分/////////////////////////////
+   2          ////当按下P3.5键时，从指定地址开始录音
+   3          /// 当按下P3.6键时，从指定地址开始放音
+   4          /// 当按下P3.7键时，停止当前的操作
+   5          
+   6          #include <reg52.h>
+   7          
+   8          #include "LCD1602.h"
+   9          #include "ISD4004.h"
+  10          #include "key.h"
+  11          unsigned int a,b;
+  12          unsigned char flag=0;
+  13          void main(void)
+  14          {  
+  15   1              LCDInit(); 
+  16   1              flag = 0;
+  17   1              EX0=1;                                    //开外部中断0
+  18   1              IT0=1;                                    //设置为下降沿触发方式
+  19   1              IE0=1;                                    //开外部中断0
+  20   1              while(1)
+  21   1              {
+  22   2                      key_scan();     
+  23   2              } 
+  24   1      }
+  25          
+  26          void timer0(void) interrupt 0 //计数器0中断      
+  27          {
+  28   1              if(FunctionCount == 5 && ModeCount==1)//单曲循环
+  29   1              {
+  30   2                      if(NowRec == 1 ) //第一首歌曲
+  31   2                      {       LCDDispString(1,2,"   Record 1    ");play(ADDR1STR);}
+  32   2                      if(NowRec == 2) //第2首歌曲
+  33   2                      {       LCDDispString(1,2,"   Record 2    ");play(ADDR2STR);}
+  34   2                      if(NowRec == 3) //第3首歌曲
+  35   2                      {       LCDDispString(1,2,"   Record 3    ");play(ADDR3STR);}
+  36   2                      if(NowRec == 4) //第4首歌曲
+  37   2                      {       LCDDispString(1,2,"   Record 4    ");play(ADDR4STR);}
+  38   2              }
+  39   1              else if(FunctionCount == 5 && ModeCount==2)//全循环
+  40   1              {
+  41   2                      if(NowRec == 4) //第4首歌曲
+  42   2                      {       LCDDispString(1,2,"   Record 4    ");NowRec=1;play(ADDR4STR);}
+  43   2                      else if(NowRec == 3) //第3首歌曲
+  44   2                      {       LCDDispString(1,2,"   Record 3    ");NowRec=4;play(ADDR3STR);}
+  45   2                      else if( NowRec == 2) //第2首歌曲
+  46   2                      {       LCDDispString(1,2,"   Record 2    ");NowRec=3;play(ADDR2STR);}
+  47   2                      else if(NowRec == 1) //第一首歌曲
+  48   2                      {       LCDDispString(1,2,"   Record 1    ");NowRec=2;play(ADDR1STR);}
+  49   2              }        
+  50   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    305    ----
+   CONSTANT SIZE    =     64    ----
+C51 COMPILER V9.01   语音存储回放                                                          10/27/2015 21:35:24 PAGE 2   
+
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
